@@ -14,7 +14,7 @@ class TodoItem(BaseModel):
     description: str
     completed: bool = False
 
-# ✅ 상태 업데이트를 위한 Pydantic 모델 추가
+# 상태 업데이트를 위한 Pydantic 모델
 class CompleteUpdate(BaseModel):
     completed: bool
 
@@ -49,7 +49,7 @@ def add_todo(todo: TodoItem):
     write_todos(todos)
     return todo
 
-# ✅ 상태 변경 엔드포인트 수정 (Pydantic 모델 활용)
+# ✅ 상태 변경 엔드포인트
 @app.patch("/todos/{todo_id}/complete")
 def update_todo_status(todo_id: int, update_data: CompleteUpdate):
     todos = read_todos()
@@ -58,6 +58,18 @@ def update_todo_status(todo_id: int, update_data: CompleteUpdate):
             todo["completed"] = update_data.completed
             write_todos(todos)
             return {"message": "Status updated"}
+    raise HTTPException(status_code=404, detail="Todo not found")
+
+# ✅ 새로운 "수정" 엔드포인트 추가
+@app.patch("/todos/{todo_id}/edit")
+def edit_todo(todo_id: int, update_data: dict):
+    todos = read_todos()
+    for todo in todos:
+        if todo["id"] == todo_id:
+            todo["title"] = update_data.get("title", todo["title"])
+            todo["description"] = update_data.get("description", todo["description"])
+            write_todos(todos)
+            return {"message": "Todo updated"}
     raise HTTPException(status_code=404, detail="Todo not found")
 
 @app.delete("/todos/{todo_id}")

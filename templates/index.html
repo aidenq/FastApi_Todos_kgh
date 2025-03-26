@@ -26,9 +26,12 @@
             todos.forEach(todo => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    ${todo.title}: ${todo.description} 
-                    (Completed: ${todo.completed ? 'true' : 'false'})
-                    <button onclick="toggleComplete(${todo.id}, ${todo.completed})">Edit</button>
+                    <input type="text" value="${todo.title}" id="title-${todo.id}">
+                    <input type="text" value="${todo.description}" id="desc-${todo.id}">
+                    <button onclick="updateTodo(${todo.id})">Edit</button>
+                    <button onclick="toggleComplete(${todo.id}, ${todo.completed})">
+                        ${todo.completed ? '✅ Completed' : '⬜ Not Completed'}
+                    </button>
                     <button onclick="deleteTodo(${todo.id})">Delete</button>
                 `;
                 list.appendChild(li);
@@ -61,12 +64,30 @@
             }
         }
 
-        // ✅ To-Do 완료 상태 변경 (FastAPI가 이해할 수 있도록 JSON 데이터 형식 수정)
+        // ✅ To-Do 내용 수정 기능 추가
+        async function updateTodo(id) {
+            const title = document.getElementById(`title-${id}`).value.trim();
+            const description = document.getElementById(`desc-${id}`).value.trim();
+
+            const response = await fetch(`/todos/${id}/edit`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+
+            if (response.ok) {
+                fetchTodos();
+            } else {
+                alert('수정 실패!');
+            }
+        }
+
+        // ✅ To-Do 완료 상태 변경
         async function toggleComplete(id, currentStatus) {
             const response = await fetch(`/todos/${id}/complete`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ "completed": !currentStatus }) // 👈 변경된 부분!
+                body: JSON.stringify({ "completed": !currentStatus })
             });
 
             if (response.ok) {
