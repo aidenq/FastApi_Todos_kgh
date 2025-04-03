@@ -1,119 +1,239 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>To-Do List</title>
-</head>
-<body>
-    <h1>To-Do List</h1>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-    <ul id="todo-list"></ul>
-    
-    <!-- 입력 폼 -->
-    <input type="text" id="todo-title" placeholder="Title">
-    <input type="text" id="todo-desc" placeholder="Description">
-    <button onclick="addTodo()">Add To-Do</button>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb, #ebedee);
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        #todo-date {
+            display: block;
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        #todo-form input {
+            width: 100%;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        #todo-form button {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 10px;
+            background-color: #6c63ff;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+
+        #todo-form button:hover {
+            background-color: #554fe8;
+        }
+
+        ul#todo-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 2rem;
+        }
+
+        ul#todo-list li {
+            background-color: #f4f4f4;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        ul#todo-list input[type="text"] {
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            width: 100%;
+        }
+
+        ul#todo-list button {
+            margin-right: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .edit-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .complete-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body onload="setTodayAndFetchTodos()">
+    <div class="container">
+        <h1>📋 To-Do List</h1>
+        <input type="date" id="todo-date" onchange="fetchTodosByDate()" />
+
+        <div id="todo-form">
+            <input type="text" id="todo-title" placeholder="할 일 제목" />
+            <input type="text" id="todo-desc" placeholder="설명" />
+            <button onclick="addTodo()">+ 할 일 추가</button>
+        </div>
+
+        <ul id="todo-list"></ul>
+    </div>
 
     <script>
-        // To-Do 리스트 가져오기
-        async function fetchTodos() {
-            const response = await fetch('/todos');
+        // 기존 스크립트 그대로 유지
+        function setTodayAndFetchTodos() {
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("todo-date").value = today;
+            fetchTodosByDate();
+        }
+
+        async function fetchTodosByDate() {
+            const selectedDate = document.getElementById("todo-date").value;
+            if (!selectedDate) return;
+            
+            const response = await fetch(`/todos/${selectedDate}`);
             const todos = await response.json();
-            const list = document.getElementById('todo-list');
-            list.innerHTML = '';
+            const list = document.getElementById("todo-list");
+            list.innerHTML = "";
 
             todos.forEach(todo => {
-                const li = document.createElement('li');
+                const li = document.createElement("li");
                 li.innerHTML = `
                     <input type="text" value="${todo.title}" id="title-${todo.id}">
                     <input type="text" value="${todo.description}" id="desc-${todo.id}">
-                    <button onclick="updateTodo(${todo.id})">Edit</button>
-                    <button onclick="toggleComplete(${todo.id}, ${todo.completed})">
-                        ${todo.completed ? '✅ Completed' : '⬜ Not Completed'}
-                    </button>
-                    <button onclick="deleteTodo(${todo.id})">Delete</button>
+                    <div>
+                        <button class="edit-btn" onclick="updateTodo(${todo.id})">수정</button>
+                        <button class="complete-btn" onclick="toggleComplete(${todo.id}, ${todo.completed})">
+                            ${todo.completed ? '✅ 완료' : '⬜ 미완료'}
+                        </button>
+                        <button class="delete-btn" onclick="deleteTodo(${todo.id})">삭제</button>
+                    </div>
                 `;
                 list.appendChild(li);
             });
         }
 
-        // 새로운 To-Do 추가
         async function addTodo() {
-            const title = document.getElementById('todo-title').value.trim();
-            const description = document.getElementById('todo-desc').value.trim();
-            if (!title || !description) return alert('제목과 설명을 입력하세요.');
+            const title = document.getElementById("todo-title").value.trim();
+            const description = document.getElementById("todo-desc").value.trim();
+            const date = document.getElementById("todo-date").value;
+            if (!title || !description || !date) return alert("모든 필드를 입력하세요.");
 
-            const response = await fetch('/todos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch("/todos", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     id: Date.now(), 
                     title, 
                     description, 
-                    completed: false 
+                    completed: false,
+                    date 
                 })
             });
 
             if (response.ok) {
-                document.getElementById('todo-title').value = '';
-                document.getElementById('todo-desc').value = '';
-                fetchTodos();
+                document.getElementById("todo-title").value = "";
+                document.getElementById("todo-desc").value = "";
+                fetchTodosByDate();
             } else {
-                alert('추가 실패!');
+                alert("추가 실패!");
             }
         }
 
-        // ✅ To-Do 내용 수정 기능 추가
         async function updateTodo(id) {
             const title = document.getElementById(`title-${id}`).value.trim();
             const description = document.getElementById(`desc-${id}`).value.trim();
+            const date = document.getElementById("todo-date").value;
 
             const response = await fetch(`/todos/${id}/edit`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description })
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, description, date })
             });
 
             if (response.ok) {
-                fetchTodos();
+                fetchTodosByDate();
             } else {
-                alert('수정 실패!');
+                alert("수정 실패!");
             }
         }
 
-        // ✅ To-Do 완료 상태 변경
         async function toggleComplete(id, currentStatus) {
             const response = await fetch(`/todos/${id}/complete`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ "completed": !currentStatus })
             });
 
             if (response.ok) {
-                fetchTodos();
+                fetchTodosByDate();
             } else {
-                alert('상태 변경 실패!');
+                alert("상태 변경 실패!");
             }
         }
 
-        // To-Do 삭제
         async function deleteTodo(id) {
-            if (!confirm('정말 삭제하시겠습니까?')) return;
+            if (!confirm("정말 삭제하시겠습니까?")) return;
 
             const response = await fetch(`/todos/${id}`, {
-                method: 'DELETE'
+                method: "DELETE"
             });
 
             if (response.ok) {
-                fetchTodos();
+                fetchTodosByDate();
             } else {
-                alert('삭제 실패!');
+                alert("삭제 실패!");
             }
         }
-
-        // 페이지 로드 시 To-Do 리스트 불러오기
-        fetchTodos();
     </script>
 </body>
 </html>

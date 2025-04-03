@@ -2,19 +2,20 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import json
 from fastapi.responses import HTMLResponse
+from datetime import date
 
 app = FastAPI()
 
 TODO_FILE = "todo.json"
 
-# 기존 TodoItem 모델
+# TodoItem 모델에 날짜 추가
 class TodoItem(BaseModel):
     id: int
     title: str
     description: str
     completed: bool = False
+    date: str  # YYYY-MM-DD 형식의 문자열
 
-# 상태 업데이트를 위한 Pydantic 모델
 class CompleteUpdate(BaseModel):
     completed: bool
 
@@ -29,8 +30,6 @@ def write_todos(todos):
     with open(TODO_FILE, "w", encoding="utf-8") as file:
         json.dump(todos, file, ensure_ascii=False, indent=4)
 
-write_todos(read_todos())
-
 @app.get("/", response_class=HTMLResponse)
 def get_homepage():
     with open("templates/index.html", "r", encoding="utf-8") as file:
@@ -39,6 +38,12 @@ def get_homepage():
 @app.get("/todos")
 def get_todos():
     return read_todos()
+
+@app.get("/todos/{todo_date}")
+def get_todos_by_date(todo_date: str):
+    todos = read_todos()
+    filtered_todos = [todo for todo in todos if todo["date"] == todo_date]
+    return filtered_todos
 
 @app.post("/todos")
 def add_todo(todo: TodoItem):
@@ -49,7 +54,6 @@ def add_todo(todo: TodoItem):
     write_todos(todos)
     return todo
 
-# ✅ 상태 변경 엔드포인트
 @app.patch("/todos/{todo_id}/complete")
 def update_todo_status(todo_id: int, update_data: CompleteUpdate):
     todos = read_todos()
@@ -60,7 +64,6 @@ def update_todo_status(todo_id: int, update_data: CompleteUpdate):
             return {"message": "Status updated"}
     raise HTTPException(status_code=404, detail="Todo not found")
 
-# ✅ 새로운 "수정" 엔드포인트 추가
 @app.patch("/todos/{todo_id}/edit")
 def edit_todo(todo_id: int, update_data: dict):
     todos = read_todos()
@@ -68,6 +71,7 @@ def edit_todo(todo_id: int, update_data: dict):
         if todo["id"] == todo_id:
             todo["title"] = update_data.get("title", todo["title"])
             todo["description"] = update_data.get("description", todo["description"])
+            todo["date"] = update_data.get("date", todo["date"])
             write_todos(todos)
             return {"message": "Todo updated"}
     raise HTTPException(status_code=404, detail="Todo not found")
