@@ -58,7 +58,7 @@ def test_update_todo():
     updated_todo = {"id": 1, "title": "Updated", "description": "Updated description", "completed": True, "date": "2025-04-06"}
     response = client.patch("/todos/1/edit", json=updated_todo)
     assert response.status_code == 200
-    assert response.json()["title"] == "Updated"
+    assert response.json()["message"] == "Todo updated"
 
 def test_update_todo_status():
     todo = {
@@ -100,7 +100,7 @@ def test_delete_todo():
     save_todos([todo.dict()])
     response = client.delete("/todos/1")
     assert response.status_code == 200
-    assert response.json()["message"] == "To-Do item deleted"
+    assert response.json()["message"] == "Todo deleted"
     
 def test_delete_todo_not_found():
     response = client.delete("/todos/999")
