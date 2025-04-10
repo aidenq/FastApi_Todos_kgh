@@ -114,6 +114,7 @@
         }
     </style>
 </head>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <body onload="setTodayAndFetchTodos()">
     <div class="container">
         <h1>📋 To-Do List</h1>
@@ -122,6 +123,12 @@
         <div id="todo-form">
             <input type="text" id="todo-title" placeholder="할 일 제목" />
             <input type="text" id="todo-desc" placeholder="설명" />
+            <select id="todo-repeat">
+                <option value="none">반복 없음</option>
+                <option value="daily">매일</option>
+                <option value="weekly">매주</option>
+                <option value="monthly">매월</option>
+            </select>
             <button onclick="addTodo()">+ 할 일 추가</button>
         </div>
 
@@ -130,9 +137,11 @@
 
     <script>
         // 기존 스크립트 그대로 유지
-        function setTodayAndFetchTodos() {
+        async function setTodayAndFetchTodos() {
             const today = new Date().toISOString().split("T")[0];
             document.getElementById("todo-date").value = today;
+
+            await fetch("/todos/generate-recurring");
             fetchTodosByDate();
         }
 
@@ -160,12 +169,32 @@
                 `;
                 list.appendChild(li);
             });
+            new Sortable(document.getElementById("todo-list"), {
+                animation: 150,
+                onEnd: saveNewOrder
+            });
         }
+        async function saveNewOrder() {
+            const listItems = document.querySelectorAll("#todo-list li");
+            const newOrder = Array.from(listItems).map(li => {
+            const idAttr = li.querySelector("input").id; // 예: title-123456
+            return parseInt(idAttr.replace("title-", ""));
+            });
+
+            await fetch("/todos/reorder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newOrder)
+            });
+        }
+
 
         async function addTodo() {
             const title = document.getElementById("todo-title").value.trim();
             const description = document.getElementById("todo-desc").value.trim();
             const date = document.getElementById("todo-date").value;
+            const repeat = document.getElementById("todo-repeat").value;
+
             if (!title || !description || !date) return alert("모든 필드를 입력하세요.");
 
             const response = await fetch("/todos", {
@@ -176,13 +205,15 @@
                     title, 
                     description, 
                     completed: false,
-                    date 
+                    date,
+                    repeat
                 })
             });
 
             if (response.ok) {
                 document.getElementById("todo-title").value = "";
                 document.getElementById("todo-desc").value = "";
+                document.getElementById("todo-repeat").value = "none";
                 fetchTodosByDate();
             } else {
                 alert("추가 실패!");
