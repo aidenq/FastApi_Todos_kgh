@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = "http://3.34.1.40/8000
+BASE_URL = "http://3.34.1.40/8000"
 
 def test_homepage():
     response = requests.get(f"{BASE_URL}/")
