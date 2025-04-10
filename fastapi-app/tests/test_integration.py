@@ -9,7 +9,6 @@ def test_homepage():
 
 def test_create_and_get_todo():
     todo = {
-        "id": 999,
         "title": "Integration Test",
         "description": "This is from integration test",
         "completed": False,
