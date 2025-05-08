@@ -40,5 +40,14 @@
         "date": "2025-04-10",
         "repeat": "none",
         "order": 0
+    },
+    {
+        "id": 1746716170491,
+        "title": "매일",
+        "description": "할일",
+        "completed": false,
+        "date": "2025-05-08",
+        "repeat": "daily",
+        "order": 0
     }
 ]

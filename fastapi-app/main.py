@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import json
 from fastapi.responses import HTMLResponse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import List
 
 app = FastAPI()
@@ -60,38 +60,52 @@ def add_todo(todo: TodoItem):
 
 @app.post("/todos/generate-recurring")
 def generate_recurring():
+    """반복 설정을 가진 템플릿(todo)에서
+    ‘오늘’에 해당하는 실제 할 일을 만들어 준다."""
+
     todos = read_todos()
-    today = date.today().isoformat()
-    new_todos = []
+    today = date.today()
+    today_str = today.isoformat()
+
+    # 1) 현재 최대 ID 기준으로 next_id 준비
+    next_id = max((t["id"] for t in todos), default=0) + 1
+    new_todos: list[dict] = []
 
     for todo in todos:
-        if todo.get("repeat", "none") == "none":
-            continue
-        if todo["date"] == today:
-            continue  # 오늘 할 일이라면 생성 안 함
+        repeat = todo.get("repeat", "none")
+        if repeat == "none" or todo["date"] == today_str:
+            continue  # 반복 설정 없음 / 오늘 이미 처리
 
-        # 다음 반복일 계산
-        todo_date = datetime.strptime(todo["date"], "%Y-%m-%d")
-        if todo["repeat"] == "daily":
+        # 2) 다음 예정일 계산
+        todo_date = datetime.strptime(todo["date"], "%Y-%m-%d").date()
+        if repeat == "daily":
             next_date = todo_date + timedelta(days=1)
-        elif todo["repeat"] == "weekly":
-            next_date = todo_date + timedelta(weeks=1)
-        elif todo["repeat"] == "monthly":
-            try:
-                next_date = todo_date.replace(day=28) + timedelta(days=4)  # 다음 달로 이동
-                next_date = next_date.replace(day=todo_date.day)
-            except ValueError:
-                continue  # 유효하지 않은 날짜(예: 2월 30일)는 건너뜀
+        elif repeat == "weekly":
+            next_date = todo_date + timedelta(days=7)
+        elif repeat == "monthly":
+            year_delta, next_month = divmod(todo_date.month, 12)
+            next_date = todo_date.replace(
+                year=todo_date.year + year_delta,
+                month=next_month + 1
+            )
         else:
             continue
 
-        # 오늘 날짜와 일치하면 새로 생성
-        if next_date.date().isoformat() == today:
-            new_todo = todo.copy()
-            new_todo["id"] = int(datetime.now().timestamp() * 1000)
-            new_todo["date"] = today
-            new_todo["completed"] = False
-            new_todos.append(new_todo)
+        if next_date != today:
+            continue  # 오늘 일정이 아님
+
+        # 3) 실제 할 일 인스턴스 생성
+        new_instance = {
+            **todo,
+            "id": next_id,
+            "date": today_str,
+            "completed": False
+        }
+        next_id += 1
+        new_todos.append(new_instance)
+
+        # 4) 템플릿의 최종 생성일을 오늘로 업데이트
+        todo["date"] = today_str
 
     if new_todos:
         todos.extend(new_todos)
