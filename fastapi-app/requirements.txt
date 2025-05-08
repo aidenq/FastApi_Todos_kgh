@@ -4,4 +4,3 @@ pytest
 pytest-html
 httpx
 pytest-cov
-requests
