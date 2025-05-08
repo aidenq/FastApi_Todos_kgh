@@ -1,6 +1,6 @@
-import requests
+import os, requests
 
-BASE_URL = "http://15.164.224.88:8002"
+BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8002")
 
 def test_get_todos_empty():
     response = requests.get(f"{BASE_URL}/todos")
