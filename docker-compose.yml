@@ -51,16 +51,15 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
-    ports:
-      - "8081:8080"
+    restart: unless-stopped
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
-    command:
-      - "--prometheus_endpoint=/metrics"
-    restart: unless-stopped
+    ports:
+      - "8081:8080"       # ← 여기만 바꿔주면 끝!
+
 
 volumes:
   sonarqube_conf:
