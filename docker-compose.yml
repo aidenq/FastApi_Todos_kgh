@@ -28,7 +28,7 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "9090:9090"
+      - "7070:9090"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
 
@@ -46,7 +46,7 @@ services:
     image: prom/node-exporter:latest
     container_name: node-exporter
     ports:
-      - "9100:9100"
+      - "7100:9100"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -58,7 +58,7 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     ports:
-      - "8081:8080"       # ← 여기만 바꿔주면 끝!
+      - "8080:8080"       # ← 여기만 바꿔주면 끝!
 
 
 volumes:
