@@ -4,10 +4,14 @@ import json
 from fastapi.responses import HTMLResponse
 from datetime import datetime, timedelta, date
 from typing import List
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
 
 TODO_FILE = "todo.json"
+
+# Prometheus 메트릭스 엔드포인트 (/metrics)
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 # TodoItem 모델에 날짜 추가
 class TodoItem(BaseModel):
@@ -44,10 +48,28 @@ def get_todos():
 
 @app.get("/todos/{todo_date}")
 def get_todos_by_date(todo_date: str):
-    todos = read_todos()
-    filtered_todos = [todo for todo in todos if todo["date"] == todo_date]
-    # order 기준 정렬
-    return sorted(filtered_todos, key=lambda x: x.get("order", 0))
+    target = datetime.strptime(todo_date, "%Y-%m-%d").date()
+    result = []
+
+    for todo in read_todos():
+        base_date = datetime.strptime(todo["date"], "%Y-%m-%d").date()
+
+        if todo["repeat"] == "none" and base_date == target:
+            result.append(todo)
+
+        elif todo["repeat"] == "daily" and base_date <= target:
+            result.append(todo)
+
+        elif todo["repeat"] == "weekly" and base_date <= target \
+             and (target - base_date).days % 7 == 0:
+            result.append(todo)
+
+        elif todo["repeat"] == "monthly" and base_date.day == target.day \
+             and base_date <= target:
+            result.append(todo)
+
+    # order 정렬
+    return sorted(result, key=lambda x: x.get("order", 0))
 
 @app.post("/todos")
 def add_todo(todo: TodoItem):

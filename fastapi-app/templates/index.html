@@ -31,6 +31,71 @@
             color: #333;
         }
 
+        h2 {
+            margin-top: 2.5rem;
+            font-size: 1.3rem;
+            color: #6c63ff;
+        }
+
+        section.done { opacity:.4; }          /* 완료 항목 흐리게 */
+        ul#today-list,ul#daily-list,
+        ul#weekly-list,ul#monthly-list {
+            list-style:none; padding:0; margin:1rem 0 2rem;
+        }
+
+        /* ===== 개별 카드(할 일) 스타일 ===== */
+        ul#today-list li,ul#daily-list li,
+        ul#weekly-list li,ul#monthly-list li {
+            position: relative;
+            /* 카드 느낌 */
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+            /* 여백 & 배치 */
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* 제목/설명 ↔ 버튼 그룹 사이 간격 */
+        }
+
+        /* 완료 항목 흐리게 + 취소선 */
+        ul li.done {
+            opacity: .8;
+        }
+
+        /* ===== 인라인 입력창(제목·설명) ===== */
+        ul li input[type="text"] {
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            flex: 1 1 auto;        /* 좌우로 넓게 */
+            min-width: 0;          /* flex item 축소 허용 */
+        }
+
+        /* ===== 버튼 그룹 ===== */
+        ul li div {
+            display: flex;
+            gap: 4px;
+        }
+
+        ul li button {
+            border: none;
+            background: #6c63ff;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        ul li button:hover {
+            background: #5148e0;
+        }
+
         #todo-date {
             display: block;
             width: 100%;
@@ -67,37 +132,6 @@
             background-color: #554fe8;
         }
 
-        ul#todo-list {
-            list-style-type: none;
-            padding: 0;
-            margin-top: 2rem;
-        }
-
-        ul#todo-list li {
-            background-color: #f4f4f4;
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        ul#todo-list input[type="text"] {
-            border: none;
-            background: transparent;
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-            width: 100%;
-        }
-
-        ul#todo-list button {
-            margin-right: 0.5rem;
-            padding: 0.4rem 0.8rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
         .edit-btn {
             background-color: #007bff;
             color: white;
@@ -112,6 +146,67 @@
             background-color: #dc3545;
             color: white;
         }
+        /* 🔸섹터 격자 */
+        .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:2rem;
+        }
+
+        /* 🔸각 섹터 카드 */
+        .sector{
+            min-height: 28rem;          /* 기존 대비 2× 가량 */
+            padding: 3rem 3.2rem 4rem;
+            font-size: 1.05rem;  
+        }
+
+        /* 🔸섹터 헤더(제목+버튼 나란히) */
+        .sector-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:1rem;
+        }
+
+        /* 🔸+ 버튼 */
+        .add-btn{
+            width:34px;height:34px;
+            border:none;border-radius:50%;
+            background:#6c63ff;color:#fff;
+            font-size:1.4rem;line-height:1;
+            cursor:pointer;transition:background .2s;
+        }
+        .add-btn:hover{background:#554df5;}
+        /* 🔸모달(dialog) 기본 */
+        .todo-modal{
+            border:none;
+            border-radius:1rem;
+            padding:2.5rem 3rem;
+            max-width:420px;
+            width:90%;
+            box-shadow:0 12px 32px rgba(0,0,0,.25);
+        }
+        .todo-modal::backdrop{
+            background:rgba(0,0,0,.35);
+        }
+
+        /* 🔸모달 내부 입력 */
+        #modal-form input,#modal-form textarea{
+            width:100%;
+            margin-bottom:1rem;
+            padding:.8rem 1rem;
+            border:1px solid #ddd;
+            border-radius:.6rem;
+            font:inherit;
+        }
+        .modal-actions{
+            display:flex;gap:.8rem;justify-content:flex-end;
+        }
+        .btn-save{
+            background:#6c63ff;color:#fff;border:none;
+            padding:.6rem 1.4rem;border-radius:.6rem;cursor:pointer;
+        }
+        .btn-cancel{background:transparent;border:none;cursor:pointer;}
     </style>
 </head>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -123,20 +218,87 @@
         <div id="todo-form">
             <input type="text" id="todo-title" placeholder="할 일 제목" />
             <input type="text" id="todo-desc" placeholder="설명" />
-            <select id="todo-repeat">
-                <option value="none">반복 없음</option>
-                <option value="daily">매일</option>
-                <option value="weekly">매주</option>
-                <option value="monthly">매월</option>
-            </select>
-            <button onclick="addTodo()">+ 할 일 추가</button>
-        </div>
 
-        <ul id="todo-list"></ul>
+            <!-- 입력창(제목·설명·날짜)은 그대로 두고, 리스트 영역만 새로 묶습니다. -->
+            <div class="grid">
+            <!-- 오늘 -->
+            <section id="today-sector" class="sector">
+                <div class="sector-header">
+                <h2>오늘 할 일</h2>
+                <button class="add-btn" data-repeat="none">＋</button>
+                </div>
+                <ul id="today-list"></ul>
+            </section>
+
+            <!-- 매일 -->
+            <section id="daily-sector" class="sector">
+                <div class="sector-header">
+                <h2>매일 할 일</h2>
+                <button class="add-btn" data-repeat="daily">＋</button>
+                </div>
+                <ul id="daily-list"></ul>
+            </section>
+
+            <!-- 매주 -->
+            <section id="weekly-sector" class="sector">
+                <div class="sector-header">
+                <h2>매주 할 일</h2>
+                <button class="add-btn" data-repeat="weekly">＋</button>
+                </div>
+                <ul id="weekly-list"></ul>
+            </section>
+
+            <!-- 매월 -->
+            <section id="monthly-sector" class="sector">
+                <div class="sector-header">
+                <h2>매월 할 일</h2>
+                <button class="add-btn" data-repeat="monthly">＋</button>
+                </div>
+                <ul id="monthly-list"></ul>
+            </section>
+            </div>
+        </div>
+        <dialog id="todo-modal" class="todo-modal">
+        <form id="modal-form" method="dialog">
+            <h3 id="modal-head">할 일 추가</h3>
+
+            <input id="m-title"  type="text" placeholder="할 일 제목" required />
+            <textarea id="m-desc" rows="3" placeholder="설명" required></textarea>
+            <input id="m-date"  type="date"/>
+
+            <div class="modal-actions">
+            <button value="cancel" class="btn-cancel">취소</button>
+            <button id="m-save"  type="submit" class="btn-save">저장</button>
+            </div>
+        </form>
+        </dialog>
     </div>
 
     <script>
-        // 기존 스크립트 그대로 유지
+        function renderTodoList(listId, todos) {
+            const ul = document.getElementById(listId);
+            ul.innerHTML = "";                         // reset
+            todos.forEach(todo => {
+                const li = document.createElement("li");
+                li.className = todo.completed ? "done" : "";
+                li.innerHTML = `
+                <input type="text" value="${todo.title}" id="title-${todo.id}">
+                <input type="text" value="${todo.description}" id="desc-${todo.id}">
+                <div>
+                    <button onclick="updateTodo(${todo.id})">수정</button>
+                    <button onclick="toggleComplete(${todo.id},${todo.completed})">
+                    ${todo.completed ? "✅ 완료" : "⬜ 미완료"}
+                    </button>
+                    <button onclick="deleteTodo(${todo.id})">삭제</button>
+                </div>
+                `;
+                ul.appendChild(li);
+            });
+
+            // 드래그 정렬(선택) : 범주별로 독립적으로 적용
+            new Sortable(ul, { animation:150, onEnd: saveNewOrder });
+        }
+
         async function setTodayAndFetchTodos() {
             const today = new Date().toISOString().split("T")[0];
             document.getElementById("todo-date").value = today;
@@ -148,34 +310,28 @@
         async function fetchTodosByDate() {
             const selectedDate = document.getElementById("todo-date").value;
             if (!selectedDate) return;
-            
-            const response = await fetch(`/todos/${selectedDate}`);
-            const todos = await response.json();
-            const list = document.getElementById("todo-list");
-            list.innerHTML = "";
 
-            todos.forEach(todo => {
-                const li = document.createElement("li");
-                li.innerHTML = `
-                    <input type="text" value="${todo.title}" id="title-${todo.id}">
-                    <input type="text" value="${todo.description}" id="desc-${todo.id}">
-                    <div>
-                        <button class="edit-btn" onclick="updateTodo(${todo.id})">수정</button>
-                        <button class="complete-btn" onclick="toggleComplete(${todo.id}, ${todo.completed})">
-                            ${todo.completed ? '✅ 완료' : '⬜ 미완료'}
-                        </button>
-                        <button class="delete-btn" onclick="deleteTodo(${todo.id})">삭제</button>
-                    </div>
-                `;
-                list.appendChild(li);
-            });
-            new Sortable(document.getElementById("todo-list"), {
-                animation: 150,
-                onEnd: saveNewOrder
-            });
+            /* ❶ 오늘 생성돼야 할 반복 일정 먼저 생성 */
+            await fetch("/todos/generate-recurring",{ method:"POST" });
+
+            /* ❷ 오늘(또는 사용자가 고른 날짜) 기준 데이터 수집 */
+            const res   = await fetch(`/todos/${selectedDate}`);
+            const todos = await res.json();
+
+            /* ❸ repeat 값 기준으로 분류 */
+            const buckets = { none:[], daily:[], weekly:[], monthly:[] };
+            todos.forEach(t => buckets[t.repeat] ? buckets[t.repeat].push(t)
+                                                : buckets.none.push(t));
+
+            /* ❹ 렌더링 */
+            renderTodoList("today-list"   , buckets.none);
+            renderTodoList("daily-list"   , buckets.daily);
+            renderTodoList("weekly-list"  , buckets.weekly);
+            renderTodoList("monthly-list" , buckets.monthly);
         }
+
         async function saveNewOrder() {
-            const listItems = document.querySelectorAll("#todo-list li");
+            const listItems = ul.querySelectorAll("li");
             const newOrder = Array.from(listItems).map(li => {
             const idAttr = li.querySelector("input").id; // 예: title-123456
             return parseInt(idAttr.replace("title-", ""));
@@ -186,38 +342,6 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newOrder)
             });
-        }
-
-
-        async function addTodo() {
-            const title = document.getElementById("todo-title").value.trim();
-            const description = document.getElementById("todo-desc").value.trim();
-            const date = document.getElementById("todo-date").value;
-            const repeat = document.getElementById("todo-repeat").value;
-
-            if (!title || !description || !date) return alert("모든 필드를 입력하세요.");
-
-            const response = await fetch("/todos", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    id: Date.now(), 
-                    title, 
-                    description, 
-                    completed: false,
-                    date,
-                    repeat
-                })
-            });
-
-            if (response.ok) {
-                document.getElementById("todo-title").value = "";
-                document.getElementById("todo-desc").value = "";
-                document.getElementById("todo-repeat").value = "none";
-                fetchTodosByDate();
-            } else {
-                alert("추가 실패!");
-            }
         }
 
         async function updateTodo(id) {
@@ -264,6 +388,57 @@
             } else {
                 alert("삭제 실패!");
             }
+        }
+        /* ------- 기존 변수 ------- */
+        const modal = document.getElementById("todo-modal");
+        const modalHead = document.getElementById("modal-head");
+        const mTitle = document.getElementById("m-title");
+        const mDesc  = document.getElementById("m-desc");
+        const mDate  = document.getElementById("m-date");
+        const saveBtn= document.getElementById("m-save");
+
+        let repeatType = "none";
+
+        /* ------- 모달 열기 ------- */
+        document.querySelectorAll(".add-btn").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+            repeatType = btn.dataset.repeat;                 // daily | weekly ...
+            modalHead.textContent =
+                {none:"오늘",daily:"매일",weekly:"매주",monthly:"매월"}[repeatType] + " 할 일 추가";
+            mTitle.value = mDesc.value = "";
+            mDate.value  = "";
+            modal.showModal();
+        });
+        });
+
+        /* ------- 저장(Submit) ------- */
+        saveBtn.addEventListener("click",async (e)=>{
+        e.preventDefault();          // <form> 기본 submit 막기
+
+        const title = mTitle.value.trim();
+        const description = mDesc.value.trim();
+        const date = mDate.value || new Date().toISOString().slice(0,10);
+
+        if(!title || !description){ alert("제목·설명을 입력하세요."); return; }
+
+        const ok = await addTodoViaAPI({title,description,date,repeat:repeatType});
+        if(ok){ modal.close(); fetchTodosByDate(); }
+        });
+
+        /* ------- 기존 addTodo() → API 전담 함수로 분리 ------- */
+        async function addTodoViaAPI({title,description,date,repeat}){
+        const res = await fetch("/todos",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+                id:Date.now(),
+                title,description,
+                completed:false,
+                date,repeat,order:0
+            })
+        });
+        if(!res.ok){ alert("추가 실패"); return false; }
+        return true;
         }
     </script>
 </body>
