@@ -4,14 +4,14 @@ import json
 from fastapi.responses import HTMLResponse
 from datetime import datetime, timedelta, date
 from typing import List
-from prometheus_fastapi_instrumentator import Instrumentator
+#from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
 
 TODO_FILE = "todo.json"
 
 # Prometheus 메트릭스 엔드포인트 (/metrics)
-Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+#Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 # TodoItem 모델에 날짜 추가
 class TodoItem(BaseModel):
