@@ -1,18 +1,27 @@
 import os
-import httpx
+import sys
+import importlib.util
+from fastapi.testclient import TestClient
 
-# requests 라이브러리가 아닌 httpx를 사용하도록 변경
-requests = httpx
+# Dynamically load the FastAPI app from main.py
+project_root = os.path.dirname(os.path.dirname(__file__))
+spec = importlib.util.spec_from_file_location(
+    "main_module", os.path.join(project_root, "main.py")
+)
+main_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(main_module)
+app = getattr(main_module, "app")
 
-BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8002")
+client = TestClient(app)
+
 
 def test_get_todos_empty():
-    response = requests.get(f"{BASE_URL}/todos")
+    response = client.get("/todos")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
+
 def test_create_and_get_todo():
-    # 새 todo 생성
     new_todo = {
         "id": 101,
         "title": "Integration Test Todo",
@@ -20,36 +29,40 @@ def test_create_and_get_todo():
         "completed": False,
         "date": "2025-04-10"
     }
-    response = requests.post(f"{BASE_URL}/todos", json=new_todo)
+    # Create new todo
+    response = client.post("/todos", json=new_todo)
     assert response.status_code == 200
-    assert response.json()["title"] == new_todo["title"]
+    data = response.json()
+    assert data.get("title") == new_todo["title"]
 
-    # 생성된 todo 조회
-    response = requests.get(f"{BASE_URL}/todos")
-    assert response.status_code == 200
+    # Verify in list
+    response = client.get("/todos")
     todos = response.json()
-    assert any(todo["id"] == new_todo["id"] for todo in todos)
+    assert any(todo.get("id") == new_todo["id"] for todo in todos)
 
-    # todo 업데이트
+    # Update the todo
     updated_data = {
         "title": "Updated Integration Test Todo",
         "description": "Testing PUT endpoint",
         "completed": True
     }
-    response = requests.patch(f"{BASE_URL}/todos/101/edit", json=updated_data)
+    response = client.patch(f"/todos/{new_todo['id']}/edit", json=updated_data)
     assert response.status_code == 200
-    assert response.json()["message"] == "Todo updated"
+    assert response.json().get("message") == "Todo updated"
+
 
 def test_complete_todo():
-    response = requests.patch(f"{BASE_URL}/todos/101/complete", json={"completed": True})
+    response = client.patch("/todos/101/complete", json={"completed": True})
     assert response.status_code == 200
-    assert response.json()["message"] == "Status updated"
+    assert response.json().get("message") == "Status updated"
+
 
 def test_delete_todo():
-    response = requests.delete(f"{BASE_URL}/todos/101")
+    response = client.delete("/todos/101")
     assert response.status_code == 200
-    assert response.json()["message"] == "Todo deleted"
+    assert response.json().get("message") == "Todo deleted"
+
 
 def test_delete_todo_not_found():
-    response = requests.delete(f"{BASE_URL}/todos/99999")
+    response = client.delete("/todos/99999")
     assert response.status_code == 404
