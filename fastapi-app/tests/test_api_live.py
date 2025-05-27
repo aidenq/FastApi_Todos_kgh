@@ -1,4 +1,8 @@
-import os, requests
+import os
+import httpx
+
+# requests 라이브러리가 아닌 httpx를 사용하도록 변경
+requests = httpx
 
 BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8002")
 
@@ -26,13 +30,11 @@ def test_create_and_get_todo():
     todos = response.json()
     assert any(todo["id"] == new_todo["id"] for todo in todos)
 
-def test_update_todo():
+    # todo 업데이트
     updated_data = {
-        "id": 101,
-        "title": "Updated Title",
-        "description": "Updated desc",
-        "completed": True,
-        "date": "2025-04-10"
+        "title": "Updated Integration Test Todo",
+        "description": "Testing PUT endpoint",
+        "completed": True
     }
     response = requests.patch(f"{BASE_URL}/todos/101/edit", json=updated_data)
     assert response.status_code == 200
