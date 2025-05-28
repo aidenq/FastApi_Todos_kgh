@@ -121,6 +121,10 @@ services:
       - loadtest-net
 
 
+networks:
+  loadtest-net:
+    driver: bridge
+
 volumes:
   sonarqube_conf:
   sonarqube_data:
