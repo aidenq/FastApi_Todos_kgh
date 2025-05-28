@@ -27,14 +27,27 @@
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
       </ThreadGroup>
+      <!-- HTTP Header Manager -->
+      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+        <collectionProp name="HeaderManager.headers">
+          <elementProp name="Accept" elementType="Header">
+            <stringProp name="Header.name">Accept</stringProp>
+            <stringProp name="Header.value">application/json</stringProp>
+          </elementProp>
+          <elementProp name="Content-Type" elementType="Header">
+            <stringProp name="Header.name">Content-Type</stringProp>
+            <stringProp name="Header.value">application/json</stringProp>
+          </elementProp>
+        </collectionProp>
+      </HeaderManager>
       <hashTree>
         <!-- HTTP Request Defaults -->
         <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">${__P(BASE_URL)}</stringProp>
-          <stringProp name="HTTPSampler.port">5001</stringProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
         </ConfigTestElement>
         <hashTree/>
@@ -44,7 +57,7 @@
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
-          <stringProp name="HTTPSampler.path">/todos</stringProp>
+          <stringProp name="HTTPSampler.path">${__P(BASE_URL)}/todos</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
         <!-- POST /todos -->
@@ -60,7 +73,7 @@
             </collectionProp>
           </elementProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
-          <stringProp name="HTTPSampler.path">/todos</stringProp>
+          <stringProp name="HTTPSampler.path">${__P(BASE_URL)}/todos</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
         <!-- PATCH /todos/101/edit -->
