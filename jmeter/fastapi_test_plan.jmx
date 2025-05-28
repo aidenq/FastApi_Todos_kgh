@@ -27,20 +27,23 @@
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
       </ThreadGroup>
-      <!-- HTTP Header Manager -->
-      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-        <collectionProp name="HeaderManager.headers">
-          <elementProp name="Accept" elementType="Header">
-            <stringProp name="Header.name">Accept</stringProp>
-            <stringProp name="Header.value">application/json</stringProp>
-          </elementProp>
-          <elementProp name="Content-Type" elementType="Header">
-            <stringProp name="Header.name">Content-Type</stringProp>
-            <stringProp name="Header.value">application/json</stringProp>
-          </elementProp>
-        </collectionProp>
-      </HeaderManager>
       <hashTree>
+
+        <!-- HTTP Header Manager -->
+        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+          <collectionProp name="HeaderManager.headers">
+            <elementProp name="Accept" elementType="Header">
+              <stringProp name="Header.name">Accept</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+            <elementProp name="Content-Type" elementType="Header">
+              <stringProp name="Header.name">Content-Type</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+          </collectionProp>
+        </HeaderManager>
+        <hashTree/>
+
         <!-- HTTP Request Defaults -->
         <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -51,6 +54,7 @@
           <stringProp name="HTTPSampler.protocol">http</stringProp>
         </ConfigTestElement>
         <hashTree/>
+
         <!-- GET /todos -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /todos" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -60,6 +64,7 @@
           <stringProp name="HTTPSampler.path">${__P(BASE_URL)}/todos</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
+
         <!-- POST /todos -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /todos" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -76,6 +81,7 @@
           <stringProp name="HTTPSampler.path">${__P(BASE_URL)}/todos</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
+
         <!-- PATCH /todos/101/edit -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PATCH /todos/101/edit" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -92,6 +98,7 @@
           <stringProp name="HTTPSampler.path">/todos/101/edit</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
+
         <!-- PATCH /todos/101/complete -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PATCH /todos/101/complete" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -108,6 +115,7 @@
           <stringProp name="HTTPSampler.path">/todos/101/complete</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
+
         <!-- DELETE /todos/101 -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /todos/101" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -117,6 +125,7 @@
           <stringProp name="HTTPSampler.path">/todos/101</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
+
         <!-- DELETE /todos/99999 (Not Found) -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /todos/99999" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -126,6 +135,7 @@
           <stringProp name="HTTPSampler.path">/todos/99999</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
+
       </hashTree>
     </hashTree>
   </hashTree>
