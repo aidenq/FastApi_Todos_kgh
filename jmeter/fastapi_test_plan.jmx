@@ -49,8 +49,8 @@
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
-          <stringProp name="HTTPSampler.domain"></stringProp>
-          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.domain">${__P(BASE_URL)}</stringProp>
+          <stringProp name="HTTPSampler.port">5001</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
         </ConfigTestElement>
         <hashTree/>
@@ -61,7 +61,7 @@
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
-          <stringProp name="HTTPSampler.path">${__P(BASE_URL)}/todos</stringProp>
+          <stringProp name="HTTPSampler.path">/todos</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
 
@@ -78,7 +78,7 @@
             </collectionProp>
           </elementProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
-          <stringProp name="HTTPSampler.path">${__P(BASE_URL)}/todos</stringProp>
+          <stringProp name="HTTPSampler.path">/todos</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
 
