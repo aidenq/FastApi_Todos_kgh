@@ -1,133 +1,96 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Path
 from pydantic import BaseModel
 import json
 from fastapi.responses import HTMLResponse
 from datetime import datetime, timedelta, date
 from typing import List
-#from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
 
 TODO_FILE = "todo.json"
 
-# Prometheus 메트릭스 엔드포인트 (/metrics)
-#Instrumentator().instrument(app).expose(app, endpoint="/metrics")
-
-# TodoItem 모델에 날짜 추가
+# ----------------------------
+#        Pydantic Models
+# ----------------------------
 class TodoItem(BaseModel):
     id: int
     title: str
     description: str
     completed: bool = False
-    date: str  # YYYY-MM-DD 형식의 문자열
-    repeat: str = "none" # "none", "daily", "weekly", "monthly"
+    date: str  # YYYY-MM-DD
+    repeat: str = "none"  # "none", "daily", "weekly", "monthly"
     order: int = 0
 
 class CompleteUpdate(BaseModel):
     completed: bool
 
+# ----------------------------
+#        Helper funcs
+# ----------------------------
+
 def read_todos():
     try:
-        with open(TODO_FILE, "r", encoding="utf-8") as file:
-            return json.load(file)
+        with open(TODO_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return []
 
-def write_todos(todos):
-    with open(TODO_FILE, "w", encoding="utf-8") as file:
-        json.dump(todos, file, ensure_ascii=False, indent=4)
+def write_todos(data):
+    with open(TODO_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+# ----------------------------
+#            Routes
+# ----------------------------
 
 @app.get("/", response_class=HTMLResponse)
 def get_homepage():
-    with open("templates/index.html", "r", encoding="utf-8") as file:
-        return file.read()
+    with open("templates/index.html", "r", encoding="utf-8") as f:
+        return f.read()
+
+# 1. 전체 목록 -----------------------------------------------------
 
 @app.get("/todos")
-def get_todos():
+def list_todos():
     return read_todos()
 
-@app.get("/todos/{todo_date}")
-def get_todos_by_date(todo_date: str):
-    target = datetime.strptime(todo_date, "%Y-%m-%d").date()
-    result = []
+# 2. 반복 일정 생성 (정적 경로 → 날짜 라우트보다 먼저 선언) ---------
 
-    for todo in read_todos():
-        base_date = datetime.strptime(todo["date"], "%Y-%m-%d").date()
-
-        if todo["repeat"] == "none" and base_date == target:
-            result.append(todo)
-
-        elif todo["repeat"] == "daily" and base_date <= target:
-            result.append(todo)
-
-        elif todo["repeat"] == "weekly" and base_date <= target \
-             and (target - base_date).days % 7 == 0:
-            result.append(todo)
-
-        elif todo["repeat"] == "monthly" and base_date.day == target.day \
-             and base_date <= target:
-            result.append(todo)
-
-    # order 정렬
-    return sorted(result, key=lambda x: x.get("order", 0))
-
-@app.post("/todos")
-def add_todo(todo: TodoItem):
-    todos = read_todos()
-    if any(t["id"] == todo.id for t in todos):
-        raise HTTPException(status_code=400, detail="ID already exists")
-    todos.append(todo.dict())
-    write_todos(todos)
-    return todo
-
+@app.get("/todos/generate-recurring")
 @app.post("/todos/generate-recurring")
 def generate_recurring():
-    """반복 설정을 가진 템플릿(todo)에서
-    ‘오늘’에 해당하는 실제 할 일을 만들어 준다."""
-
+    """오늘 날짜에 해당하는 반복 할 일을 생성한다."""
     todos = read_todos()
     today = date.today()
     today_str = today.isoformat()
 
-    # 1) 현재 최대 ID 기준으로 next_id 준비
     next_id = max((t["id"] for t in todos), default=0) + 1
     new_todos: list[dict] = []
 
-    for todo in todos:
-        repeat = todo.get("repeat", "none")
-        if repeat == "none" or todo["date"] == today_str:
-            continue  # 반복 설정 없음 / 오늘 이미 처리
+    for t in todos:
+        repeat = t.get("repeat", "none")
+        if repeat == "none" or t["date"] == today_str:
+            continue
 
-        # 2) 다음 예정일 계산
-        todo_date = datetime.strptime(todo["date"], "%Y-%m-%d").date()
+        base_date = datetime.strptime(t["date"], "%Y-%m-%d").date()
         if repeat == "daily":
-            next_date = todo_date + timedelta(days=1)
+            next_date = base_date + timedelta(days=1)
         elif repeat == "weekly":
-            next_date = todo_date + timedelta(days=7)
+            next_date = base_date + timedelta(weeks=1)
         elif repeat == "monthly":
-            year_delta, next_month = divmod(todo_date.month, 12)
-            next_date = todo_date.replace(
-                year=todo_date.year + year_delta,
-                month=next_month + 1
-            )
+            # 단순 계산: 다음 달 같은 일자 (30일 이전 날짜에서만 안전)
+            year_incr, new_month = divmod(base_date.month, 12)
+            next_date = base_date.replace(year=base_date.year + year_incr, month=new_month + 1)
         else:
             continue
 
         if next_date != today:
-            continue  # 오늘 일정이 아님
+            continue
 
-        # 3) 실제 할 일 인스턴스 생성
-        new_instance = {
-            **todo,
-            "id": next_id,
-            "date": today_str,
-            "completed": False
-        }
+        new_instance = {**t, "id": next_id, "date": today_str, "completed": False}
         next_id += 1
         new_todos.append(new_instance)
-
-        # 4) 템플릿의 최종 생성일을 오늘로 업데이트
-        todo["date"] = today_str
+        t["date"] = today_str  # 템플릿 날짜 갱신
 
     if new_todos:
         todos.extend(new_todos)
@@ -135,45 +98,94 @@ def generate_recurring():
 
     return {"message": f"{len(new_todos)}개 반복 일정 생성됨"}
 
+# 3. 정렬 순서 저장 (정적) ----------------------------------------
+
 @app.post("/todos/reorder")
 def reorder_todos(new_order: List[int]):
+    """프런트에서 전달한 ID 배열 순서대로 order 값을 재설정."""
     todos = read_todos()
-    id_to_todo = {todo["id"]: todo for todo in todos}
+    id_map = {t["id"]: t for t in todos}
 
-    for index, todo_id in enumerate(new_order):
-        if todo_id in id_to_todo:
-            id_to_todo[todo_id]["order"] = index
+    for idx, todo_id in enumerate(new_order):
+        if todo_id in id_map:
+            id_map[todo_id]["order"] = idx
 
-    write_todos(list(id_to_todo.values()))
+    write_todos(list(id_map.values()))
     return {"message": "순서가 저장되었습니다."}
 
-@app.patch("/todos/{todo_id}/complete")
-def update_todo_status(todo_id: int, update_data: CompleteUpdate):
+# 4. 날짜별 조회 (동적) -------------------------------------------
+
+@app.get("/todos/{todo_date}")
+def get_todos_by_date(
+    todo_date: str = Path(
+        ..., regex=r"^\d{4}-\d{2}-\d{2}$", description="yyyy-mm-dd 형식의 날짜"
+    )
+):
+    try:
+        target = datetime.strptime(todo_date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(400, "Invalid date format. Use YYYY-MM-DD.")
+
+    result: list[dict] = []
+    for t in read_todos():
+        base_date = datetime.strptime(t["date"], "%Y-%m-%d").date()
+        repeat = t.get("repeat", "none")
+
+        if repeat == "none" and base_date == target:
+            result.append(t)
+        elif repeat == "daily" and base_date <= target:
+            result.append(t)
+        elif repeat == "weekly" and base_date <= target and (target - base_date).days % 7 == 0:
+            result.append(t)
+        elif repeat == "monthly" and base_date.day == target.day and base_date <= target:
+            result.append(t)
+
+    return sorted(result, key=lambda x: x.get("order", 0))
+
+# 5. 할 일 추가 ----------------------------------------------------
+
+@app.post("/todos")
+def add_todo(todo: TodoItem):
     todos = read_todos()
-    for todo in todos:
-        if todo["id"] == todo_id:
-            todo["completed"] = update_data.completed
+    if any(t["id"] == todo.id for t in todos):
+        raise HTTPException(400, "ID already exists")
+    todos.append(todo.dict())
+    write_todos(todos)
+    return todo
+
+# 6. 상태 토글 -----------------------------------------------------
+
+@app.patch("/todos/{todo_id:int}/complete")
+def update_todo_status(todo_id: int, update: CompleteUpdate):
+    todos = read_todos()
+    for t in todos:
+        if t["id"] == todo_id:
+            t["completed"] = update.completed
             write_todos(todos)
             return {"message": "Status updated"}
-    raise HTTPException(status_code=404, detail="Todo not found")
+    raise HTTPException(404, "Todo not found")
 
-@app.patch("/todos/{todo_id}/edit")
-def edit_todo(todo_id: int, update_data: dict):
+# 7. 내용 수정 -----------------------------------------------------
+
+@app.patch("/todos/{todo_id:int}/edit")
+def edit_todo(todo_id: int, update: dict):
     todos = read_todos()
-    for todo in todos:
-        if todo["id"] == todo_id:
-            todo["title"] = update_data.get("title", todo["title"])
-            todo["description"] = update_data.get("description", todo["description"])
-            todo["date"] = update_data.get("date", todo["date"])
+    for t in todos:
+        if t["id"] == todo_id:
+            t["title"] = update.get("title", t["title"])
+            t["description"] = update.get("description", t["description"])
+            t["date"] = update.get("date", t["date"])
             write_todos(todos)
             return {"message": "Todo updated"}
-    raise HTTPException(status_code=404, detail="Todo not found")
+    raise HTTPException(404, "Todo not found")
 
-@app.delete("/todos/{todo_id}")
+# 8. 삭제 ----------------------------------------------------------
+
+@app.delete("/todos/{todo_id:int}")
 def delete_todo(todo_id: int):
     todos = read_todos()
-    new_todos = [todo for todo in todos if todo["id"] != todo_id]
+    new_todos = [t for t in todos if t["id"] != todo_id]
     if len(new_todos) == len(todos):
-        raise HTTPException(status_code=404, detail="Todo not found")
+        raise HTTPException(404, "Todo not found")
     write_todos(new_todos)
     return {"message": "Todo deleted"}
