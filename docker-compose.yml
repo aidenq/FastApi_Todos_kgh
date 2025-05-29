@@ -116,7 +116,7 @@ services:
     container_name: telegraf
     depends_on: [influxdb]
     volumes:
-      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./telegraf:/etc/telegraf:ro
     networks:
       - loadtest-net
 
