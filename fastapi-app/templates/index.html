@@ -320,10 +320,9 @@ ul li button,
 
             <input id="m-title"  type="text" placeholder="할 일 제목" required />
             <textarea id="m-desc" rows="3" placeholder="설명" required></textarea>
-            <input id="m-date"  type="date"/>
 
             <div class="modal-actions">
-            <button value="cancel" class="btn-cancel">취소</button>
+            <button value="cancel" class="btn-cancel" formnovalidate>취소</button>
             <button id="m-save"  type="submit" class="btn-save">저장</button>
             </div>
         </form>
@@ -450,7 +449,6 @@ ul li button,
         const modalHead = document.getElementById("modal-head");
         const mTitle = document.getElementById("m-title");
         const mDesc  = document.getElementById("m-desc");
-        const mDate  = document.getElementById("m-date");
         const saveBtn= document.getElementById("m-save");
 
         let repeatType = "none";
@@ -462,7 +460,6 @@ ul li button,
             modalHead.textContent =
                 {none:"오늘",daily:"매일",weekly:"매주",monthly:"매월"}[repeatType] + " 할 일 추가";
             mTitle.value = mDesc.value = "";
-            mDate.value  = "";
             modal.showModal();
         });
         });
@@ -473,7 +470,7 @@ ul li button,
 
         const title = mTitle.value.trim();
         const description = mDesc.value.trim();
-        const date = mDate.value || new Date().toISOString().slice(0,10);
+        const date = new Date().toISOString().slice(0,10);
 
         if(!title || !description){ alert("제목·설명을 입력하세요."); return; }
 
