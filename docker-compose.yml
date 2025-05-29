@@ -116,7 +116,8 @@ services:
     container_name: telegraf
     depends_on: [influxdb]
     volumes:
-      - ./telegraf:/etc/telegraf:ro
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - loadtest-net
 
