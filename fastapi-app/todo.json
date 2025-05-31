@@ -1,1 +1,29 @@
-[]
+[
+    {
+        "id": 1748675939091,
+        "title": "아이스크림",
+        "description": "먹고싶다",
+        "completed": true,
+        "date": "2025-05-31",
+        "repeat": "none",
+        "order": 1
+    },
+    {
+        "id": 1748675953143,
+        "title": "물",
+        "description": "마시기",
+        "completed": false,
+        "date": "2025-05-31",
+        "repeat": "none",
+        "order": 0
+    },
+    {
+        "id": 1748675963179,
+        "title": "물",
+        "description": "먹기",
+        "completed": false,
+        "date": "2025-05-31",
+        "repeat": "daily",
+        "order": 0
+    }
+]
