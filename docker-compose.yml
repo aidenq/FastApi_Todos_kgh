@@ -125,7 +125,7 @@ services:
     networks:
       - loadtest-net
 
-    loki:
+  loki:
     image: grafana/loki:latest
     container_name: loki
     ports:
