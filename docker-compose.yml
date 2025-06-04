@@ -83,26 +83,12 @@ services:
       - loadtest-net
 
   loki:
-    image: grafana/loki:2.9.2
+    image: grafana/loki:latest
     ports:
       - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
     networks:
       - loadtest-net
 
-  promtail:
-    image: grafana/promtail:2.9.2
-    container_name: promtail
-    volumes:
-      - /var/log:/var/log:ro
-      - /etc/machine-id:/etc/machine-id:ro
-      - ./promtail-config.yml:/etc/promtail/promtail.yml
-    command: -config.file=/etc/promtail/promtail.yml
-    networks:
-      - loadtest-net
-    depends_on:
-      - loki
-  
 networks:
   loadtest-net:
     driver: bridge
