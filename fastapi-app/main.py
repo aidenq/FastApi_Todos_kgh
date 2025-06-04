@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from typing import List
 import json
 import os
 import logging
