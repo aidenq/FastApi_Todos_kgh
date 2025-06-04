@@ -8,6 +8,10 @@ services:
     container_name: fastapi-app
     ports:
       - "5001:5001"
+    depends_on:
+      - loki
+    environment:
+      - LOKI_ENDPOINT=http://loki:3100/loki/api/v1/push
     networks:
       - loadtest-net
 
