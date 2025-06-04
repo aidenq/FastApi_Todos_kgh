@@ -46,8 +46,7 @@ services:
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_extensions:/opt/sonarqube/extensions
 
-<<<<<<< HEAD
-=======
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -72,12 +71,10 @@ services:
     ports:
       - "7100:9100"
 
->>>>>>> d078cb1483034bd370261216496672019930d014
   loki:
     image: grafana/loki:latest
     container_name: loki
     ports:
-<<<<<<< HEAD
       - "3100:3100"
     networks:
       - loadtest-net
@@ -86,9 +83,6 @@ services:
 networks:
   loadtest-net:
     driver: bridge
-=======
-      - "3100:3100"  
->>>>>>> d078cb1483034bd370261216496672019930d014
 
 volumes:
   sonarqube_conf:
