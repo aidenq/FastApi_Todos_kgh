@@ -6,11 +6,11 @@ import json
 import os
 import logging
 import time
-from queue import Queue
+from multiprocessing import Queue
 from os import getenv
 from fastapi import Request
 from prometheus_fastapi_instrumentator import Instrumentator
-from loki_logger_handler import LokiQueueHandler
+from logging_loki import LokiQueueHandler
 from datetime import date, datetime, timedelta
 
 app = FastAPI()

@@ -6,4 +6,4 @@ httpx
 pytest-cov
 prometheus-fastapi-instrumentator
 prometheus-client
-loki-logger-handler
+python-logging-loki==0.3.1
