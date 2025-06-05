@@ -10,7 +10,7 @@ from queue import Queue
 from os import getenv
 from fastapi import Request
 from prometheus_fastapi_instrumentator import Instrumentator
-from logging_loki import LokiQueueHandler
+from loki_logger_handler import LokiQueueHandler
 from datetime import date, datetime, timedelta
 
 app = FastAPI()
